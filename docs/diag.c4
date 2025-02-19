@@ -56,6 +56,20 @@ model {
                 column created_at "created_at" "timestamp"
                 column updated_at "updated_at" "timestamp"
             }
+            table userPersonalInfoTable "User Personal Info Table" {
+                column user_id "user_id" "UUID"
+                column first_name "first_name" "string"
+                column last_name "last_name" "string"
+                column gender "gender" "string"
+                column age "age" "integer"
+            }
+            table userSettingsTable "User Settings Table" {
+                column id "id" "UUID"
+                column user_id "user_id"
+                column language "language" "string"
+                column timezone "timezone" "string"
+                column notifications "notifications" "boolean"
+            }
         }
 
         postsDB = container "Posts DB" {
@@ -79,6 +93,13 @@ model {
                 column created_at "created_at" "timestamp"
                 column updated_at "updated_at" "timestamp"
             }
+            table postLikesTable "Post likes Table" {
+                column id "id" "UUID"
+                column user_id "user_id" "UUID"
+                column post_id "post_id" "UUID"
+                column reaction "reaction" "string"
+                column created_at "created_at" "timestamp"
+            }
         }
 
         statisticsDB = container "Statistics DB" {
@@ -94,6 +115,21 @@ model {
                 column _views "views" "integer"
                 column comments "comments" "integer"
                 column updated_at "updated_at" "timestamp"
+            }
+            table userStatisticsTable "User Statistics Table" {
+                column id "id" "UUID"
+                column user_id "user_id" "UUID"
+                column posts_count "posts_count" "integer"
+                column total_likes_count "total_likes_count" "integer"
+                column total_views_count "total_views_count" "integer"
+            }
+            table userDailyStatisticsTable "User Daily Statistics Table" {
+                column id "id" "UUID"
+                column user_id "user_id" "UUID"
+                column date "date" "date"
+                column posts_count "posts_count" "integer"
+                column total_likes_count "total_likes_count" "integer"
+                column total_views_count "total_views_count" "integer"
             }
         }
     }
