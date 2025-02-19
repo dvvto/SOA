@@ -1,0 +1,141 @@
+specification {
+    element person {
+        style {
+            shape person
+            color green
+        }
+    }
+
+    element component
+    element softwareSystem
+    element container
+    element table
+    element column
+}
+
+model {
+    user = person "Пользователь" "Пользователь социальной сети"
+
+    socialNetwork = softwareSystem "SocNet" "Микросервисная архитектура социальной сети" {
+        
+        api = container "API" {
+            description "Принимает HTTP запросы от UI и маршрутизирует их к внутренним сервисам"
+        }
+
+        userService = container "User Service" {
+            description "Управление пользователями, регистрация, аутентификация"
+        }
+
+        postsCommentsService = container "Posts/Comments Service" {
+            description "Управление CRUD операциями для постов и комментариев"
+        }
+
+        statisticsService = container "Statistics Service" {
+            description "Агрегация статистики: лайки, просмотры, комментарии"
+        }
+
+        messageBroker = container "Message Broker" {
+            description "Брокер сообщений для передачи событий (лайки, просмотры, комментарии)"
+            technology "Kafka"
+            style {
+                shape queue
+            }
+        }
+
+        userDB = container "User DB" {
+            description "Хранение данных пользователей"
+            technology "PostgreSQL"
+            style {
+                shape cylinder
+            }
+            table userTable "User Table" {
+                column id "id" "UUID"
+                column username "username" "string"
+                column email "email" "string"
+                column password "password_hash" "string"
+                column created_at "created_at" "timestamp"
+                column updated_at "updated_at" "timestamp"
+            }
+        }
+
+        postsDB = container "Posts DB" {
+            description "Хранение данных постов и комментариев"
+            technology "PostgreSQL / Cassandra"
+            style {
+                shape cylinder
+            }
+            table postsTable "Posts Table" {
+                column id "id" "UUID"
+                column user_id "user_id" "UUID"
+                column content "content" "text"
+                column created_at "created_at" "timestamp"
+                column updated_at "updated_at" "timestamp"
+            }
+            table commentsTable "Comments Table" {
+                column id "id" "UUID"
+                column post_id "post_id" "UUID"
+                column user_id "user_id" "UUID"
+                column comment "comment" "text"
+                column created_at "created_at" "timestamp"
+                column updated_at "updated_at" "timestamp"
+            }
+        }
+
+        statisticsDB = container "Statistics DB" {
+            description "Хранение агрегированной статистики"
+            technology "ClickHouse"
+            style {
+                shape cylinder
+            }
+            table statisticsTable "Statistics Table" {
+                column id "id" "UUID"
+                column post_id "post_id" "UUID"
+                column likes "likes" "integer"
+                column _views "views" "integer"
+                column comments "comments" "integer"
+                column updated_at "updated_at" "timestamp"
+            }
+        }
+    }
+
+    user -> socialNetwork.api "Отправляет HTTP запросы" "HTTPS"
+
+    socialNetwork.api -> socialNetwork.userService "Маршрутизирует запросы по управлению пользователями" "JSON/HTTPS"
+    socialNetwork.api -> socialNetwork.postsCommentsService "Маршрутизирует запросы для работы с постами и комментариями" "JSON/HTTPS"
+    socialNetwork.api -> socialNetwork.statisticsService "Запрашивает статистику" "JSON/HTTPS"
+
+    socialNetwork.userService -> userDB "Читает/Пишет данные" "SQL"
+    socialNetwork.postsCommentsService -> postsDB "Читает/Пишет данные" "SQL"
+    socialNetwork.statisticsService -> statisticsDB "Читает/Пишет данные" "SQL"
+
+    socialNetwork.postsCommentsService -> socialNetwork.messageBroker "Отправляет события (лайки, просмотры, комментарии)" "JSON"
+    socialNetwork.messageBroker -> socialNetwork.statisticsService "Передаёт события для агрегации статистики" "JSON"
+}
+
+views {
+    view index {
+        include *
+    }
+
+    view of userDB {
+        include *
+        include userTable.*
+        style userTable {
+            color gray
+        }
+    }
+    view of postsDB {
+        include *
+        include postsTable.*
+        style postsTable {
+            color gray
+        }
+    }
+    view of statisticsDB {
+        include *
+        include statisticsTable.*
+        style statisticsTable {
+            color gray
+        }
+    }
+}
